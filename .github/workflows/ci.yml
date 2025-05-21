@@ -1,0 +1,80 @@
+name: Continuous Integration
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      fullSemVer: ${{ steps.gitversion.outputs.fullSemVer }}
+    
+    steps:
+    
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+          fetch-depth: 0 
+
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v3.2.1
+      with:
+        versionSpec: '6.0.x'
+
+    - name: Determine Version
+      id: gitversion
+      uses: gittools/actions/gitversion/execute@v3.2.1
+      with:
+        useConfigFile: true
+        updateAssemblyInfo: true
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: ${{ runner.os }}-nuget-
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Install Playwright CLI
+      run: dotnet tool install --global Microsoft.Playwright.CLI
+  
+    - name: Install Playwright browsers
+      run: playwright install --with-deps
+    
+    - name: Build
+      run: dotnet build -c Release --no-restore
+    
+    - name: Run tests
+      run: dotnet test -c Release --no-restore --no-build --verbosity normal
+    
+  create_release:
+    name: Create release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: build
+    env:
+      fullSemVer: ${{ needs.build.outputs.fullSemVer }}
+      
+    steps:
+      - name: Create Release
+        uses: ncipollo/release-action@v1.16.0
+        with:
+          skipIfReleaseExists: true
+          allowUpdates: false
+          draft: false
+          makeLatest: true
+          tag: v${{ env.fullSemVer }}
+          name: Release v${{ env.fullSemVer }}
+          generateReleaseNotes: true
+          body: Release ${{ env.fullSemVer }} of ${{ github.repository }}
