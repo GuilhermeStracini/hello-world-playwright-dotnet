@@ -54,7 +54,7 @@ This repo has a GitHub Actions workflow to:
 * Build the .NET app
 * Run tests
 
-See: `.github/workflows/playwright.yml`
+See: `.github/workflows/build.yml`
 
 ## 📚 Resources
 
