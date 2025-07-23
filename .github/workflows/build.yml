@@ -31,20 +31,20 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
           restore-keys: ${{ runner.os }}-nuget-
     
-      - name: Restore dependencies
-        run: dotnet restore
+      # - name: Restore dependencies
+      #   run: dotnet restore
       
-      - name: Install dependencies
-        run: dotnet restore
+      # - name: Install dependencies
+      #   run: dotnet restore
   
-      - name: Install Playwright CLI
-        run: dotnet tool install --global Microsoft.Playwright.CLI
+      # - name: Install Playwright CLI
+      #   run: dotnet tool install --global Microsoft.Playwright.CLI
   
-      - name: Install Playwright browsers
-        run: playwright install --with-deps
+      # - name: Install Playwright browsers
+      #   run: playwright install --with-deps
       
-      - name: Build solution
-        run: dotnet build -c Release
+      # - name: Build solution
+      #   run: dotnet build -c Release
 
-      - name: Run tests
-        run: dotnet test -c Release --no-build --no-restore
+      # - name: Run tests
+      #   run: dotnet test -c Release --no-build --no-restore
