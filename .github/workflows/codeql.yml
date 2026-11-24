@@ -24,11 +24,11 @@ jobs:
     - name: Check for C# files
       id: check
       run: |
-        if git ls-files '*.cs' '*.csproj' | grep -q .; then
+        if [ -n "$(git ls-files -- '*.cs')" ]; then
           echo "has-csharp=true" >> "$GITHUB_OUTPUT"
         else
           echo "has-csharp=false" >> "$GITHUB_OUTPUT"
-          echo "::notice::No C# sources found; skipping CodeQL analysis."
+          echo "::notice::No C# source files found; skipping CodeQL analysis."
         fi
 
   analyze:
