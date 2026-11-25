@@ -9,8 +9,32 @@ on:
     - cron: "36 2 * * 2"
 
 jobs:
+  detect:
+    name: Detect C# sources
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      has-csharp: ${{ steps.check.outputs.has-csharp }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+    - name: Check for C# files
+      id: check
+      run: |
+        if [ -n "$(git ls-files -- '*.cs')" ]; then
+          echo "has-csharp=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "has-csharp=false" >> "$GITHUB_OUTPUT"
+          echo "::notice::No C# source files found; skipping CodeQL analysis."
+        fi
+
   analyze:
     name: Analyze
+    needs: detect
+    if: needs.detect.outputs.has-csharp == 'true'
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -26,20 +50,13 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-    - name: Set up .NET
-      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-      with:
-        dotnet-version: '9.x'
-
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4
+      uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
       with:
         languages: ${{ matrix.language }}
-
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4
+        build-mode: none
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@7188fc363630916deb702c7fdcf4e481b751f97a # v4
+      uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
       with:
         category: "security"
